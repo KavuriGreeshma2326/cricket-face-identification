@@ -202,6 +202,53 @@ cricket-face-identification/
 
 ---
 
+## Results
+
+Measured on the Kaggle *Indian Cricketer's Images* dataset: 576 photographs of
+15 players, of which 416 yielded a detectable face.
+
+Accuracy over 10 random train/test splits, 104 test images per split:
+
+| Model | Mean accuracy | Std dev | Worst split | Best split |
+|---|---|---|---|---|
+| **HOG + SVM** | **66.9%** | 2.6% | 61.5% | 71.2% |
+| HOG + Random Forest | 55.9% | 4.2% | 49.0% | 62.5% |
+| Eigenfaces + SVM | 50.8% | 4.0% | 46.2% | 60.6% |
+| Eigenfaces + KNN | 42.8% | 4.6% | 34.6% | 52.9% |
+
+Random guessing across 15 classes would score 6.7%.
+
+Three things are worth drawing out of this table.
+
+**HOG beats eigenfaces by more than the margin of error.** The 16-point gap
+between HOG + SVM and Eigenfaces + SVM exceeds the ±9.6% margin, so it is a
+real effect rather than a lucky split. The likely reason is that these are
+photographs scraped from the web under widely varying lighting, and HOG
+describes local edge directions while eigenfaces operate on pixel brightness,
+which lighting changes directly.
+
+**The winning model is also the most stable.** HOG + SVM varies by 2.6%
+between splits; every other model varies by 4% or more.
+
+**Single-split accuracy is not precise enough to tune against.** Before this
+evaluation was added, three configurations were compared on one split each and
+scored 62.5%, 57.8% and 56.7%. That spread is entirely inside the margin of
+error, and the apparent ranking was noise. The true mean, 66.9%, sits above
+all three — every one of those single splits happened to be a below-average
+draw. Individual player scores moved even more violently: one player's f1
+score went from 0.75 to 0.00 between runs on 5 test images.
+
+### Where the errors go
+
+Errors are not spread evenly. In a representative run, one player absorbed 9
+incorrect predictions while having only 5 test images of their own, acting as
+a sink for other players' faces. The two players with the fewest usable images
+(13 and 17 after detection losses) scored zero correct. Both effects trace
+back to class imbalance and small per-class sample sizes rather than to the
+classifier.
+
+---
+
 ## Known limits
 
 **It cannot say "I don't know".** This is a closed-set classifier: it always
